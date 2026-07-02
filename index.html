@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Кофейная Карта России</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Manrope', -apple-system, sans-serif; }
+  html, body { background: #100c08; color: #f7f1e8; overflow-x: hidden; }
+  body { padding-bottom: 92px; position: relative; min-height: 100vh; }
+  .serif { font-family: 'Playfair Display', serif; }
+  .bg-glow { position: fixed; top: -80px; left: -60px; width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(212,69,31,0.28), transparent 70%); filter: blur(50px); z-index: 0; }
+  .bg-glow2 { position: fixed; bottom: 150px; right: -90px; width: 280px; height: 280px;
+    background: radial-gradient(circle, rgba(201,160,79,0.25), transparent 70%); filter: blur(50px); z-index: 0; }
+  .app { position: relative; z-index: 1; }
+  .header { padding: 26px 20px 14px; display:flex; justify-content:space-between; align-items:center; }
+  .header .greet { font-size: 12px; color: #b8a690; font-weight: 500; }
+  .header h1 { font-size: 20px; font-weight: 700; margin-top: 4px; }
+  .header h1 span { color: #d4451f; }
+  .coin-badge { display:flex; align-items:center; gap:6px; padding: 8px 14px; border-radius: 18px;
+    background: linear-gradient(135deg, rgba(201,160,79,0.22), rgba(201,160,79,0.06));
+    border: 1px solid rgba(201,160,79,0.4); font-size: 12.5px; font-weight: 700; color:#e0bd6f; }
+  .hero-card { margin: 0 20px 16px; padding: 20px; border-radius: 24px;
+    background: linear-gradient(135deg, rgba(212,69,31,0.15), rgba(122,59,46,0.06));
+    border: 1px solid rgba(212,69,31,0.28); backdrop-filter: blur(20px); }
+  .hero-top { display:flex; justify-content: space-between; align-items:center; }
+  .hero-ring { position: relative; width: 68px; height: 68px; }
+  .hero-ring svg { transform: rotate(-90deg); }
+  .ring-bg { stroke: rgba(255,255,255,0.08); }
+  .ring-fill { stroke: #d4451f; stroke-linecap: round; }
+  .ring-text { position:absolute; top:0; left:0; width:100%; height:100%; display:flex;
+    align-items:center; justify-content:center; font-size:14px; font-weight:800; }
+  .hero-stats { text-align:right; }
+  .hero-stats .big { font-size: 24px; font-weight: 800; }
+  .hero-stats .small { font-size: 10px; color: #b8a690; margin-top:2px; }
+  .hero-desc { margin-top: 12px; font-size: 11.5px; color: #cbb99f; line-height: 1.5; }
+  .discount-strip { margin: 0 20px 18px; padding: 14px 16px; border-radius: 18px; display:flex;
+    align-items:center; justify-content:space-between; background: linear-gradient(135deg, rgba(201,160,79,0.16), rgba(201,160,79,0.04));
+    border: 1px solid rgba(201,160,79,0.3); }
+  .discount-strip .d-left { display:flex; align-items:center; gap:10px; }
+  .discount-strip .d-emo { font-size: 20px; }
+  .discount-strip .d-title { font-size: 12px; font-weight: 700; }
+  .discount-strip .d-desc { font-size: 10px; color:#b8a690; }
+  .discount-strip .d-pct { font-size: 17px; font-weight: 800; color:#e0bd6f; }
+  .section-label { padding: 0 20px; font-size: 13px; font-weight: 700; margin-bottom:10px; margin-top: 6px; }
+  .note-scroll, .route-scroll { display:flex; gap: 12px; overflow-x: auto; padding: 0 20px 6px; margin-bottom: 18px; scrollbar-width: none; }
+  .note-scroll::-webkit-scrollbar, .route-scroll::-webkit-scrollbar { display:none; }
+  .note-card { min-width: 190px; border-radius: 20px; overflow:hidden; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); flex-shrink:0; }
+  .note-img { height: 90px; display:flex; align-items:center; justify-content:center; font-size: 34px;
+    background: linear-gradient(135deg, rgba(212,69,31,0.3), rgba(122,59,46,0.15)); }
+  .note-body { padding: 12px 14px; }
+  .note-title { font-size: 12.5px; font-weight: 700; }
+  .note-text { font-size: 10px; color:#b8a690; margin-top:4px; line-height:1.4; }
+  .route-card { min-width: 210px; border-radius: 20px; padding: 15px; flex-shrink:0;
+    background: linear-gradient(160deg, rgba(122,59,46,0.2), rgba(122,59,46,0.03)); border: 1px solid rgba(212,69,31,0.28); }
+  .route-card.active-route { border-color: rgba(212,69,31,0.5); background: linear-gradient(160deg, rgba(212,69,31,0.2), rgba(212,69,31,0.03)); }
+  .route-tag { font-size: 9px; text-transform:uppercase; color:#b8a690; font-weight:700; }
+  .route-name { font-size: 14px; font-weight: 700; margin-top: 4px; }
+  .route-progress-bg { height: 6px; border-radius: 6px; background: rgba(255,255,255,0.08); margin-top: 12px; overflow:hidden; }
+  .route-progress-fill { height:100%; border-radius:6px; background: linear-gradient(90deg,#d4451f,#e0bd6f); }
+  .route-meta { display:flex; justify-content:space-between; margin-top: 8px; font-size: 10px; color:#b8a690; }
+  .route-reward { margin-top: 10px; font-size: 10px; color:#e0bd6f; font-weight:700; }
+  .tabs { display: flex; gap: 6px; padding: 0 20px; margin-bottom: 16px; }
+  .tab { flex:1; text-align:center; padding: 11px 0; border-radius: 15px; font-size: 11.5px;
+    font-weight: 700; color:#b8a690; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); }
+  .tab.active { color:#100c08; background: linear-gradient(135deg,#d4451f,#e0836f); border-color: transparent; }
+  .section { padding: 0 20px; display:none; }
+  .section.active { display:block; }
+  .region-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .region-card { border-radius: 18px; padding: 14px 6px; text-align:center; position: relative;
+    background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.07); }
+  .region-card.unlocked { background: linear-gradient(160deg, rgba(212,69,31,0.18), rgba(212,69,31,0.02)); border: 1px solid rgba(212,69,31,0.4); }
+  .region-card.locked { opacity: 0.35; filter: grayscale(0.6); }
+  .region-card .icon { font-size: 23px; }
+  .region-card .name { font-size: 10px; margin-top:6px; font-weight:600; }
+  .region-card .status { font-size: 7.5px; color:#6b6154; margin-top:2px; }
+  .region-card.unlocked .status { color:#e0836f; }
+  .badge-check { position:absolute; top:6px; right:8px; font-size:10px; }
+  .cafe-item { border-radius: 18px; padding: 14px 16px; margin-bottom: 10px; display:flex;
+    justify-content:space-between; align-items:center; background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.07); }
+  .cafe-icon { width: 38px; height: 38px; border-radius: 13px; display:flex; align-items:center; justify-content:center;
+    font-size: 16px; background: linear-gradient(135deg,#d4451f,#7a3b2e); margin-right: 12px; flex-shrink:0; }
+  .cafe-row { display:flex; align-items:center; }
+  .cafe-name { font-size: 12.5px; font-weight: 700; }
+  .cafe-addr { font-size: 10px; color:#b8a690; margin-top:2px; }
+  .cafe-dist { font-size: 11px; color:#e0836f; font-weight:700; }
+  .ach-item { border-radius: 18px; padding: 14px 16px; margin-bottom: 10px; display:flex; align-items:center; gap: 12px;
+    background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.07); }
+  .ach-item.rare { border-color: rgba(201,160,79,0.5); background: linear-gradient(135deg, rgba(201,160,79,0.14), rgba(255,255,255,0.02)); }
+  .ach-badge { width: 42px; height: 42px; border-radius: 15px; display:flex; align-items:center; justify-content:center;
+    font-size:19px; background: linear-gradient(135deg,#7a3b2e,#d4451f); flex-shrink:0; }
+  .ach-badge.rare-badge { background: linear-gradient(135deg,#c9a04f,#e0bd6f); }
+  .ach-title { font-size: 12.5px; font-weight: 700; display:flex; align-items:center; gap:6px; }
+  .rare-tag { font-size: 8px; background: #e0bd6f; color:#100c08; padding: 2px 6px; border-radius: 8px; font-weight:800; }
+  .ach-desc { font-size: 10px; color:#b8a690; margin-top:2px; }
+  .ach-reward { font-size: 9.5px; color:#e0bd6f; font-weight:700; margin-top:4px; }
+  .scan-btn { width: calc(100% - 40px); margin: 16px 20px 8px; padding: 17px; border: none; border-radius: 20px;
+    font-size: 14.5px; font-weight: 800; color: #100c08; background: linear-gradient(135deg,#d4451f,#e0836f); }
+  .toast { position:fixed; bottom:24px; left:20px; right:20px; padding:16px 18px; border-radius: 20px;
+    background: rgba(30,20,14,0.94); border: 1px solid rgba(201,160,79,0.5); backdrop-filter: blur(16px);
+    display:flex; align-items:center; gap:12px; opacity:0; transform: translateY(20px) scale(0.95);
+    transition: all 0.4s cubic-bezier(.34,1.56,.64,1); z-index: 20; }
+  .toast.show { opacity:1; transform: translateY(0) scale(1); }
+  .toast .toast-emo { font-size: 26px; }
+  .toast .toast-title { font-size: 12.5px; font-weight: 800; color:#e0bd6f; }
+  .toast .toast-desc { font-size: 10px; color:#cbb99f; margin-top:2px; }
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+<div class="bg-glow2"></div>
+
+<div class="app">
+  <div class="header">
+    <div>
+      <div class="greet" id="greetUser">Привет, странник ✦</div>
+      <h1 class="serif">Кофейная <span>Карта</span> России</h1>
+    </div>
+    <div class="coin-badge">☕ <span id="coinCount">340</span></div>
+  </div>
+
+  <div class="hero-card">
+    <div class="hero-top">
+      <div class="hero-ring">
+        <svg width="68" height="68">
+          <circle class="ring-bg" cx="34" cy="34" r="28" fill="none" stroke-width="6"></circle>
+          <circle class="ring-fill" cx="34" cy="34" r="28" fill="none" stroke-width="6" stroke-dasharray="176" stroke-dashoffset="114"></circle>
+        </svg>
+        <div class="ring-text">35%</div>
+      </div>
+      <div class="hero-stats"><div class="big">7 / 20</div><div class="small">регионов собрано</div></div>
+    </div>
+    <div class="hero-desc">Сканируй QR с дрип-пакета в каждом новом городе — открывай регионы, истории и редкие ачивки</div>
+  </div>
+
+  <div class="discount-strip">
+    <div class="d-left"><div class="d-emo">🎁</div><div><div class="d-title">Скидка активна</div><div class="d-desc">За 340 кофе-баллов</div></div></div>
+    <div class="d-pct">−15%</div>
+  </div>
+
+  <div class="section-label">📖 Заметки о местах</div>
+  <div class="note-scroll">
+    <div class="note-card"><div class="note-img">🏛️</div><div class="note-body"><div class="note-title">Москва</div><div class="note-text">Кремль стоит на месте слияния рек с XII века</div></div></div>
+    <div class="note-card"><div class="note-img">🏰</div><div class="note-body"><div class="note-title">Суздаль</div><div class="note-text">30+ храмов на 10 тыс. жителей — рекорд России</div></div></div>
+    <div class="note-card"><div class="note-img">⛰️</div><div class="note-body"><div class="note-title">Кавказ</div><div class="note-text">Эльбрус — 5642 метра, выше любой вершины Альп</div></div></div>
+  </div>
+
+  <div class="section-label">🥾 Маршрутные ачивки</div>
+  <div class="route-scroll">
+    <div class="route-card active-route">
+      <div class="route-tag">Маршрут</div><div class="route-name">Кавказская тропа</div>
+      <div class="route-progress-bg"><div class="route-progress-fill" style="width:60%"></div></div>
+      <div class="route-meta"><span>3 из 5 дрипов</span><span>60%</span></div>
+      <div class="route-reward">🏆 −25% на след. заказ</div>
+    </div>
+    <div class="route-card">
+      <div class="route-tag">Маршрут</div><div class="route-name">Золотое кольцо</div>
+      <div class="route-progress-bg"><div class="route-progress-fill" style="width:20%"></div></div>
+      <div class="route-meta"><span>1 из 6 дрипов</span><span>20%</span></div>
+      <div class="route-reward">🏆 Редкий значок</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showSection(this,'map')">🗺️ Карта</div>
+    <div class="tab" onclick="showSection(this,'cafes')">📍 Места</div>
+    <div class="tab" onclick="showSection(this,'profile')">🏆 Ачивки</div>
+  </div>
+
+  <div class="section active" id="map-section"><div class="region-grid" id="regionGrid"></div></div>
+
+  <div class="section" id="cafes-section">
+    <div class="cafe-item"><div class="cafe-row"><div class="cafe-icon">🏛️</div><div><div class="cafe-name">Музей Москвы</div><div class="cafe-addr">Зубовский бул., 2</div></div></div><div class="cafe-dist">450 м</div></div>
+    <div class="cafe-item"><div class="cafe-row"><div class="cafe-icon">☕</div><div><div class="cafe-name">Циферблат</div><div class="cafe-addr">ул. Покровка, 12</div></div></div><div class="cafe-dist">1.2 км</div></div>
+    <div class="cafe-item"><div class="cafe-row"><div class="cafe-icon">🎭</div><div><div class="cafe-name">Театр Вахтангова</div><div class="cafe-addr">Арбат, 26</div></div></div><div class="cafe-dist">2.8 км</div></div>
+  </div>
+
+  <div class="section" id="profile-section">
+    <div class="ach-item rare"><div class="ach-badge rare-badge">💎</div><div><div class="ach-title">Первый дрип года <span class="rare-tag">РЕДКАЯ</span></div><div class="ach-desc">Купил дрип 1 января</div><div class="ach-reward">+200 кофе-баллов</div></div></div>
+    <div class="ach-item"><div class="ach-badge">🥾</div><div><div class="ach-title">Тропа начата</div><div class="ach-desc">1-й дрип с Кавказской тропы</div></div></div>
+    <div class="ach-item"><div class="ach-badge">🏅</div><div><div class="ach-title">Первооткрыватель</div><div class="ach-desc">Собрал первый регион</div></div></div>
+  </div>
+
+  <button class="scan-btn" onclick="scanQR()">📷 Сканировать QR с дрипа</button>
+</div>
+
+<div class="toast" id="toast">
+  <div class="toast-emo">💎</div>
+  <div><div class="toast-title">Редкая ачивка получена!</div><div class="toast-desc">+120 кофе-баллов</div></div>
+</div>
+
+<script>
+const tg = window.Telegram ? window.Telegram.WebApp : null;
+if (tg) {
+  tg.ready();
+  tg.expand();
+  tg.setHeaderColor('#100c08');
+  tg.setBackgroundColor('#100c08');
+  const user = tg.initDataUnsafe?.user;
+  if (user && user.first_name) {
+    document.getElementById('greetUser').textContent = `Привет, ${user.first_name} ✦`;
+  }
+}
+
+const regions = [
+  {name:"Москва", icon:"🏛️", unlocked:true},{name:"СПб", icon:"⚓", unlocked:true},
+  {name:"Казань", icon:"🕌", unlocked:true},{name:"Сочи", icon:"🏖️", unlocked:true},
+  {name:"Владимир", icon:"⛪", unlocked:true},{name:"Суздаль", icon:"🏰", unlocked:true},
+  {name:"Екатеринбург", icon:"⚙️", unlocked:true},{name:"Н.Новгород", icon:"🌉", unlocked:false},
+  {name:"Калининград", icon:"🧡", unlocked:false},{name:"Иркутск", icon:"🌊", unlocked:false},
+  {name:"Владивосток", icon:"🚢", unlocked:false},{name:"Крым", icon:"🍇", unlocked:false},
+];
+const grid = document.getElementById('regionGrid');
+regions.forEach(r => {
+  const card = document.createElement('div');
+  card.className = 'region-card ' + (r.unlocked ? 'unlocked' : 'locked');
+  card.innerHTML = `<div class="icon">${r.icon}</div><div class="name">${r.name}</div><div class="status">${r.unlocked ? 'Открыто' : 'Заблокировано'}</div>${r.unlocked ? '<div class="badge-check">✅</div>' : ''}`;
+  grid.appendChild(card);
+});
+
+function showSection(el, name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(name + '-section').classList.add('active');
+  el.classList.add('active');
+  if (tg) tg.HapticFeedback.impactOccurred('light');
+}
+
+function scanQR() {
+  if (tg && tg.showScanQrPopup) {
+    tg.showScanQrPopup({ text: "Наведите камеру на QR-код на дрип-пакете" }, function(data) {
+      handleScanResult(data);
+      tg.closeScanQrPopup();
+      return true;
+    });
+  } else {
+    handleScanResult("DEMO_QR_CODE");
+  }
+}
+
+function handleScanResult(qrData) {
+  fetch('/api/scan', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      qr_data: qrData,
+      init_data: tg ? tg.initData : null
+    })
+  }).catch(() => {});
+
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  if (tg) tg.HapticFeedback.notificationOccurred('success');
+  setTimeout(() => toast.classList.remove('show'), 3800);
+}
+</script>
+
+</body>
+</html>
